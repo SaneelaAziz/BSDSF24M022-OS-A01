@@ -4,11 +4,17 @@ PIC_FLAGS = -fPIC
 AR = ar
 ARFLAGS = rcs
 
+# Installation Directories
+PREFIX ?= /usr/local
+BINDIR = $(PREFIX)/bin
+MANDIR = $(PREFIX)/share/man/man3
+
 # Directories
 SRC_DIR = src
 OBJ_DIR = obj
 LIB_DIR = lib
 BIN_DIR = bin
+MAN_DIR = man/man3
 
 # Library Sources and Objects
 LIB_SRCS = $(SRC_DIR)/mystrfunctions.c $(SRC_DIR)/myfilefunctions.c
@@ -58,8 +64,22 @@ $(STATIC_TARGET): $(CLIENT_SRC) $(STATIC_LIB) | $(BIN_DIR)
 $(OBJ_DIR) $(LIB_DIR) $(BIN_DIR):
 	mkdir -p $@
 
+# --- Installation Rules ---
+
+install: all
+	mkdir -p $(DESTDIR)$(BINDIR)
+	mkdir -p $(DESTDIR)$(MANDIR)
+	cp -f $(STATIC_TARGET) $(DESTDIR)$(BINDIR)/client
+	cp -f $(MAN_DIR)/*.1 $(DESTDIR)$(MANDIR)/ 2>/dev/null || cp -f $(MAN_DIR)/*.3 $(DESTDIR)$(MANDIR)/ 2>/dev/null || true
+	chmod 755 $(DESTDIR)$(BINDIR)/client
+	chmod 644 $(DESTDIR)$(MANDIR)/* 2>/dev/null || true
+
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/client
+	rm -f $(DESTDIR)$(MANDIR)/mycat.1 $(DESTDIR)$(MANDIR)/myfilefunctions.3 $(DESTDIR)$(MANDIR)/mystrfunctions.3 2>/dev/null || true
+
 # Clean rule removes object files, static libraries, shared libraries, and binaries
 clean:
 	rm -rf $(OBJ_DIR)/*.o $(LIB_DIR)/*.a $(LIB_DIR)/*.so $(BIN_DIR)/*
 
-.PHONY: all clean
+.PHONY: all clean install uninstall
